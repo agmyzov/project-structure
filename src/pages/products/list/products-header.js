@@ -1,9 +1,9 @@
-const header = [
+﻿const header = [
   {
     id: 'images',
     title: 'Image',
     sortable: false,
-    template: data => {
+    template: (data = []) => {
       if (!data[0]) {
         return `<div class="sortable-table__cell"></div>`;
       }

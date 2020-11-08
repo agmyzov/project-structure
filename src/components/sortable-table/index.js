@@ -68,7 +68,9 @@ export default class SortableTable {
     isSortLocally = false,
     step = 20,
     start = 1,
-    end = start + step
+    end = start + step,
+    loadParams = {},
+    href = '',
   } = {}) {
 
     this.headersConfig = headersConfig;
@@ -78,6 +80,8 @@ export default class SortableTable {
     this.step = step;
     this.start = start;
     this.end = end;
+    this.loadParams = loadParams;
+    this.href = href;
 
     this.render();
   }
@@ -100,6 +104,13 @@ export default class SortableTable {
   }
 
   async loadData(id, order, start = this.start, end = this.end) {
+    for (const [key, value] of Object.entries(this.loadParams)) {
+      if (value) {
+          this.url.searchParams.set(key, value);
+      } else {
+          this.url.searchParams.delete(key);
+      }
+    }
     this.url.searchParams.set('_sort', id);
     this.url.searchParams.set('_order', order);
     this.url.searchParams.set('_start', start);
@@ -164,10 +175,14 @@ export default class SortableTable {
   }
 
   getTableRows(data) {
-    return data.map(item => `
-      <div class="sortable-table__row">
-        ${this.getTableRow(item, data)}
-      </div>`
+    return data.map(item => {
+        if (!this.href) {
+          return `<div class="sortable-table__row">
+                  ${this.getTableRow(item, data)}
+                </div>`;
+        }
+        return `<a href="${this.href + item.id}" class="sortable-table__row">${this.getTableRow(item)}</a>`;
+      }
     ).join('');
   }
 
@@ -217,6 +232,11 @@ export default class SortableTable {
     const data = await this.loadData(id, order, start, end);
 
     this.renderRows(data);
+  }
+
+  async updateLoadParams(loadParams) {
+    this.loadParams = loadParams;
+    return await this.sortOnServer(this.sorted.id, this.sorted.order, this.start, this.end);
   }
 
   renderRows(data) {
